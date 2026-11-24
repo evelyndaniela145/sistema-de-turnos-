@@ -1,0 +1,650 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Sistema de Control de Turnos</title>
+
+  <!-- Librería para generar códigos QR -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #123b70;
+      color: white;
+      padding: 22px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 25px;
+      margin-bottom: 6px;
+    }
+
+    header p {
+      color: #dbeafe;
+      font-size: 14px;
+    }
+
+    main {
+      width: 100%;
+      max-width: 520px;
+      margin: 35px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: white;
+      padding: 28px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px #0f172a12;
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      font-size: 22px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .description {
+      text-align: center;
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      margin-bottom: 18px;
+      font-size: 15px;
+    }
+
+    input:focus {
+      outline: 2px solid #93c5fd;
+      border-color: #2563eb;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .secondary {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+
+    .secondary:hover {
+      background: #cbd5e1;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .qr-container {
+      display: flex;
+      justify-content: center;
+      margin: 25px 0;
+    }
+
+    #qrcode {
+      padding: 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: white;
+      min-height: 180px;
+      min-width: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #qrcode img,
+    #qrcode canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .status {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .turno {
+      text-align: center;
+      background: #eff6ff;
+      padding: 25px 15px;
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+
+    .turno span {
+      display: block;
+      color: #64748b;
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+
+    .turno strong {
+      font-size: 55px;
+      color: #123b70;
+      letter-spacing: 3px;
+    }
+
+    .student-info {
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.8;
+      margin-top: 15px;
+    }
+
+    .student-info strong {
+      color: #1e293b;
+    }
+
+    .note {
+      font-size: 12px;
+      text-align: center;
+      color: #64748b;
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 22px;
+      }
+
+      header h1 {
+        font-size: 21px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Control de Turnos</h1>
+  <p>Sistema de atención de Servicios Escolares</p>
+</header>
+
+<main>
+
+  <!-- PASO 1: REGISTRO DEL ALUMNO -->
+
+  <section id="registro" class="card">
+
+    <h2>Registro institucional</h2>
+
+    <p class="description">
+      Ingresa tus datos escolares para generar tu código QR
+      y obtener tu turno de atención.
+    </p>
+
+    <form id="formRegistro">
+
+      <label for="nombre">Nombre completo</label>
+
+      <input
+        type="text"
+        id="nombre"
+        placeholder="Ingresa tu nombre"
+        required
+      >
+
+      <label for="matricula">Matrícula escolar</label>
+
+      <input
+        type="text"
+        id="matricula"
+        placeholder="Ingresa tu matrícula"
+        required
+      >
+
+      <label for="correo">Correo institucional</label>
+
+      <input
+        type="email"
+        id="correo"
+        placeholder="alumno@institucion.edu.mx"
+        required
+      >
+
+      <button type="submit">
+        Registrarme y generar QR
+      </button>
+
+    </form>
+
+  </section>
+
+
+  <!-- PASO 2: GENERACIÓN DEL CÓDIGO QR -->
+
+  <section id="seccionQR" class="card hidden">
+
+    <h2>Tu código QR</h2>
+
+    <p class="description">
+      Presenta este código en el módulo de atención.
+      Para continuar, presiona el botón de confirmación.
+    </p>
+
+    <div id="estadoQR" class="status">
+      Código QR generado correctamente.
+    </div>
+
+    <div class="qr-container">
+      <div id="qrcode"></div>
+    </div>
+
+    <div class="student-info">
+
+      <p>
+        <strong>Alumno:</strong>
+        <span id="nombreQR"></span>
+      </p>
+
+      <p>
+        <strong>Matrícula:</strong>
+        <span id="matriculaQR"></span>
+      </p>
+
+    </div>
+
+    <button id="confirmarEscaneo" type="button">
+      Ya está escaneado
+    </button>
+
+    <button id="volverRegistro" class="secondary" type="button">
+      Volver al registro
+    </button>
+
+    <p class="note">
+      Este prototipo permite continuar sin utilizar un escáner.
+      El código QR se genera únicamente como demostración.
+    </p>
+
+  </section>
+
+
+  <!-- PASO 3: TURNO ASIGNADO -->
+
+  <section id="seccionTurno" class="card hidden">
+
+    <h2>¡Tu turno está listo!</h2>
+
+    <p class="description">
+      Tu registro se ha completado correctamente.
+    </p>
+
+    <div class="turno">
+
+      <span>Tu número de turno es</span>
+
+      <strong id="numeroTurno">A-001</strong>
+
+    </div>
+
+    <div class="student-info">
+
+      <p>
+        <strong>Alumno:</strong>
+        <span id="nombreTurno"></span>
+      </p>
+
+      <p>
+        <strong>Matrícula:</strong>
+        <span id="matriculaTurno"></span>
+      </p>
+
+      <p>
+        <strong>Estado:</strong>
+        En espera
+      </p>
+
+    </div>
+
+    <p class="note">
+      Conserva tu número y espera a que sea llamado
+      por el personal de Servicios Escolares.
+    </p>
+
+    <button id="nuevoRegistro" class="secondary" type="button">
+      Finalizar
+    </button>
+
+  </section>
+
+</main>
+
+<footer>
+  Sistema de Control de Turnos Escolares
+</footer>
+
+
+<script>
+
+  // Claves utilizadas para guardar información.
+
+  const CLAVE = "sistema_turnos_escolares";
+  const CLAVE_TURNOS = "contador_turnos";
+
+  const registro = document.getElementById("registro");
+  const seccionQR = document.getElementById("seccionQR");
+  const seccionTurno = document.getElementById("seccionTurno");
+
+  const formRegistro = document.getElementById("formRegistro");
+  const confirmarEscaneo = document.getElementById("confirmarEscaneo");
+
+  let alumno = null;
+
+
+  // Recuperar el registro al actualizar la página.
+
+  function recuperarRegistro() {
+
+    const guardado = localStorage.getItem(CLAVE);
+
+    if (guardado) {
+
+      alumno = JSON.parse(guardado);
+
+      if (alumno.turno) {
+        mostrarTurno();
+      } else {
+        mostrarQR();
+      }
+
+    }
+
+  }
+
+
+  // Crear un identificador único para el código QR.
+
+  function crearIdentificador() {
+
+    return "ESC-" +
+      Date.now().toString(36).toUpperCase() +
+      "-" +
+      Math.random().toString(36).substring(2, 8).toUpperCase();
+
+  }
+
+
+  // Registrar al alumno.
+
+  formRegistro.addEventListener("submit", function(event) {
+
+    event.preventDefault();
+
+    const nombre = document.getElementById("nombre").value.trim();
+    const matricula = document.getElementById("matricula").value.trim();
+    const correo = document.getElementById("correo").value.trim();
+
+    if (!nombre || !matricula || !correo) {
+
+      alert("Completa todos los campos.");
+      return;
+
+    }
+
+    alumno = {
+
+      nombre: nombre,
+      matricula: matricula,
+      correo: correo,
+
+      identificador: crearIdentificador(),
+
+      turno: null,
+      escaneado: false
+
+    };
+
+    guardarRegistro();
+
+    mostrarQR();
+
+  });
+
+
+  // Guardar los datos del alumno.
+
+  function guardarRegistro() {
+
+    localStorage.setItem(CLAVE, JSON.stringify(alumno));
+
+  }
+
+
+  // Mostrar el código QR.
+
+  function mostrarQR() {
+
+    registro.classList.add("hidden");
+    seccionTurno.classList.add("hidden");
+    seccionQR.classList.remove("hidden");
+
+    document.getElementById("nombreQR").textContent = alumno.nombre;
+
+    document.getElementById("matriculaQR").textContent =
+      alumno.matricula;
+
+    document.getElementById("qrcode").innerHTML = "";
+
+    // Generar el código QR.
+
+    if (typeof QRCode !== "undefined") {
+
+      new QRCode(document.getElementById("qrcode"), {
+
+        text: alumno.identificador,
+        width: 200,
+        height: 200,
+
+        colorDark: "#123b70",
+        colorLight: "#ffffff",
+
+        correctLevel: QRCode.CorrectLevel.H
+
+      });
+
+    } else {
+
+      document.getElementById("qrcode").textContent =
+        "No se pudo cargar el generador QR. Revisa tu conexión.";
+
+    }
+
+    // Mostrar el estado del código.
+
+    if (alumno.escaneado) {
+
+      confirmarEscaneo.disabled = true;
+
+      confirmarEscaneo.textContent = "Código confirmado";
+
+      document.getElementById("estadoQR").textContent =
+        "Tu código QR ya fue confirmado.";
+
+    } else {
+
+      confirmarEscaneo.disabled = false;
+
+      confirmarEscaneo.textContent = "Ya está escaneado";
+
+      document.getElementById("estadoQR").textContent =
+        "Código QR generado correctamente.";
+
+    }
+
+  }
+
+
+  // Confirmar el escaneo de manera simulada.
+  // No se requiere utilizar un lector de códigos QR.
+
+  confirmarEscaneo.addEventListener("click", function() {
+
+    if (!alumno || alumno.turno) {
+      return;
+    }
+
+    // Simular que el alumno ya escaneó su código.
+
+    alumno.escaneado = true;
+
+    // Generar el turno automáticamente.
+
+    alumno.turno = generarTurno();
+
+    // Guardar los datos.
+
+    guardarRegistro();
+
+    // Mostrar el turno asignado.
+
+    mostrarTurno();
+
+  });
+
+
+  // Generar turnos consecutivos.
+  // Ejemplo: A-001, A-002, A-003.
+
+  function generarTurno() {
+
+    let contador = Number(
+      localStorage.getItem(CLAVE_TURNOS) || 0
+    );
+
+    contador++;
+
+    localStorage.setItem(CLAVE_TURNOS, contador);
+
+    return "A-" + String(contador).padStart(3, "0");
+
+  }
+
+
+  // Mostrar el turno del alumno.
+
+  function mostrarTurno() {
+
+    registro.classList.add("hidden");
+    seccionQR.classList.add("hidden");
+
+    seccionTurno.classList.remove("hidden");
+
+    document.getElementById("numeroTurno").textContent =
+      alumno.turno;
+
+    document.getElementById("nombreTurno").textContent =
+      alumno.nombre;
+
+    document.getElementById("matriculaTurno").textContent =
+      alumno.matricula;
+
+  }
+
+
+  // Regresar al registro.
+
+  document.getElementById("volverRegistro").addEventListener(
+    "click",
+    function() {
+
+      seccionQR.classList.add("hidden");
+      registro.classList.remove("hidden");
+
+    }
+  );
+
+
+  // Finalizar el proceso.
+
+  document.getElementById("nuevoRegistro").addEventListener(
+    "click",
+    function() {
+
+      localStorage.removeItem(CLAVE);
+
+      alumno = null;
+
+      seccionTurno.classList.add("hidden");
+      registro.classList.remove("hidden");
+
+      formRegistro.reset();
+
+    }
+  );
+
+
+  // Iniciar la aplicación.
+
+  recuperarRegistro();
+
+</script>
+
+</body>
+</html>
